@@ -1,0 +1,20 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write          # PyPI Trusted Publishing (OIDC) — no stored secrets
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Build
+        run: uv build
+      - name: Publish to PyPI
+        run: uv publish        # OIDC; no token needed when Trusted Publishing is configured
