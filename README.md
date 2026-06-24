@@ -75,6 +75,7 @@ That's the whole onboarding. No account, no API key — the agent (or you) just 
 |---|---|
 | **uv** (recommended) | `uv tool install gfly` |
 | **uvx** (zero-install trial) | `uvx gfly search JFK LHR --depart 2026-08-15` |
+| **Homebrew** | `brew install rnwolfe/tap/gfly` |
 | **pipx** | `pipx install gfly` |
 | **pip** | `pip install gfly` |
 

@@ -38,11 +38,19 @@ uv tool upgrade gfly
 |---|---|---|
 | **uvx** (no install) | `uvx gfly search JFK LHR --depart 2026-08-15` | Try it once |
 | **uv tool install** *(recommended)* | `uv tool install gfly` | Persistent, isolated |
+| **Homebrew** | `brew install rnwolfe/tap/gfly` | macOS / Linux brew users |
 | **pipx** | `pipx install gfly` | pipx users |
 | **pip** | `pip install gfly` | Scripts, venvs, CI |
 
 :::note
 Python **≥ 3.10** is required. Check with `python --version` or `python3 --version`.
+:::
+
+:::tip[Homebrew secret storage]
+The Homebrew formula omits the optional `keyring` dependency (to avoid a heavy build). gfly works
+fully — but a [`serpapi`](/guides/backends/) key is stored in `GFLY_SERPAPI_KEY` or a `0600` file
+instead of the OS keychain. The default `google` backend needs no secret either way. Install via
+`uv`/`pipx`/`pip` if you want OS-keychain storage.
 :::
 
 ### pip inside a virtual environment
