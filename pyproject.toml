@@ -7,16 +7,18 @@ requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Ryan Wolfe" }]
 keywords = ["google-flights", "flights", "cli", "agent", "llm", "travel"]
-dependencies = ["click>=8.4"]
+dependencies = [
+    "click>=8.4",              # CLI framework (schema --json via to_info_dict)
+    "fast-flights>=3.0.2",     # google engine (default backend); reverse-engineered, breaks periodically
+    "typing-extensions>=4.15", # undeclared transitive import of fast-flights 3.0.2 (pin defensively)
+    "keyring>=25",             # serpapi key / abuse-cookie storage (env + 0600 file fallback)
+    "airportsdata>=20260315",  # offline IATA resolution for `airports search`
+]
+# Note: the serpapi backend uses stdlib urllib — no extra dependency. fast-flights' optional
+# Playwright fallback is intentionally NOT pulled (keeps the default install light & headless).
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
-# Engines wired by cli-implement (kept optional so the default install stays light & headless):
-#   google  -> fast-flights (pin the exact version; reverse-engineered, breaks periodically)
-#   serpapi -> httpx for SerpApi's Google Flights JSON API
-google = []      # e.g. ["fast-flights==3.0.2"]
-serpapi = []     # e.g. ["httpx>=0.27"]
-keyring = ["keyring>=24"]
 
 [project.scripts]
 gfly = "gfly.cli:main"

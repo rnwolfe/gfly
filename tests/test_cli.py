@@ -5,148 +5,224 @@ import pytest
 from gfly.cli import run
 
 
-@pytest.fixture(autouse=True)
-def isolated_env(tmp_path, monkeypatch):
-    # Isolate persistent throttle state per test, and disable color.
-    monkeypatch.setenv("GFLY_STATE_DIR", str(tmp_path / "state"))
-    monkeypatch.setenv("NO_COLOR", "1")
-    # Throttle OFF by default so most tests don't trip the politeness timer; the
-    # throttle tests below re-enable it explicitly.
-    monkeypatch.setenv("GFLY_NO_THROTTLE", "1")
-
-
-# --- reads ------------------------------------------------------------------
+# --- reads / normalization --------------------------------------------------
 
 def test_search_json_envelope(capsys):
-    code = run(["search", "JFK", "LHR", "--depart", "2026-08-01", "--json"])
+    code = run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--json"])
     out = capsys.readouterr().out
     assert code == 0
     env = json.loads(out)
     assert env["schemaVersion"] == "1"
     assert env["backend"] == "google"
     assert env["query"]["from"] == "JFK"
-    assert env["count"] >= 1
+    assert env["count"] == 2
     assert env["itineraries"][0]["price"] > 0
+
+
+def test_google_normalization_stops_layovers_co2(capsys):
+    code = run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--sort", "price", "--json"])
+    env = json.loads(capsys.readouterr().out)
+    assert code == 0
+    cheapest = env["itineraries"][0]            # one_stop, price 255
+    assert cheapest["stops"] == 1
+    assert cheapest["layovers"] == [{"airport": "BOS", "minutes": 75}]
+    assert cheapest["durationMinutes"] == 75 + 75 + 390   # legs + layover gap
+    assert cheapest["co2Grams"] == 455000
+    assert cheapest["co2DeltaPct"] == round((455000 - 422000) / 422000 * 100)
+    assert cheapest["flightNumbers"] == []      # google does not expose these
+    assert cheapest["bookingToken"] is None
+
+
+def test_lowercase_airports_are_normalized(capsys):
+    code = run(["search", "jfk", "lhr", "--depart", "2026-07-25", "--json"])
+    env = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert env["query"]["from"] == "JFK" and env["query"]["to"] == "LHR"
+
+
+def test_untrusted_warning_default_on_and_off(capsys):
+    run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--json"])
+    assert "_warning" in json.loads(capsys.readouterr().out)
+    run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--no-wrap-untrusted", "--json"])
+    assert "_warning" not in json.loads(capsys.readouterr().out)
 
 
 def test_search_requires_depart(capsys):
     code = run(["search", "JFK", "LHR", "--json"])
     cap = capsys.readouterr()
-    assert code == 2
-    assert cap.out.strip() == ""
-    assert "depart" in cap.err.lower()
+    assert code == 2 and cap.out.strip() == "" and "depart" in cap.err.lower()
 
 
 def test_search_no_input_hardfails(capsys):
     code = run(["search", "JFK", "LHR", "--no-input", "--json"])
-    cap = capsys.readouterr()
-    assert code == 13
-    assert "INPUT_REQUIRED" in cap.err
+    assert code == 13 and "INPUT_REQUIRED" in capsys.readouterr().err
 
 
-def test_dates_json(capsys):
-    code = run(["dates", "JFK", "LHR", "--json"])
-    out = capsys.readouterr().out
+# --- serpapi backend --------------------------------------------------------
+
+def test_serpapi_search(capsys, serpapi_env):
+    code = run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--backend", "serpapi", "--json"])
+    env = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert env["backend"] == "serpapi"
+    best = [i for i in env["itineraries"] if i["isBest"]]
+    assert best and best[0]["flightNumbers"] == ["BA 112"]
+    assert best[0]["bookingToken"] == "TOKEN-XYZ"
+    other = [i for i in env["itineraries"] if not i["isBest"]][0]
+    assert other["stops"] == 1 and other["layovers"][0]["airport"] == "BOS"
+
+
+def test_serpapi_auth_required(capsys):
+    code = run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--backend", "serpapi", "--json"])
+    assert code == 4 and "AUTH_REQUIRED" in capsys.readouterr().err
+
+
+# --- error classification ---------------------------------------------------
+
+def test_block_maps_to_exit_20_and_records_cooldown(capsys, monkeypatch):
+    from gfly import backend, throttle
+
+    def boom(q, proxy=None):
+        raise RuntimeError("Our systems have detected unusual traffic — captcha")
+    monkeypatch.setattr(backend, "_fetch_google", boom)
+    code = run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--json"])
+    err = json.loads(capsys.readouterr().err)
+    assert code == 20 and err["code"] == "BLOCKED"
+    assert err["retryAfterSeconds"] > 0
+    assert throttle.snapshot("google")["blocked"] is True   # circuit breaker opened
+
+
+def test_parse_failure_maps_to_schema_drift(capsys, monkeypatch):
+    from gfly import backend
+    monkeypatch.setattr(backend, "_fetch_google",
+                        lambda q, proxy=None: (_ for _ in ()).throw(KeyError("eQ35Ce")))
+    code = run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--json"])
+    assert code == 21 and "SCHEMA_DRIFT" in capsys.readouterr().err
+
+
+def test_no_results_is_empty(capsys, monkeypatch):
+    from gfly import backend
+    from fast_flights.exceptions import FlightsNotFound
+
+    def none(q, proxy=None):
+        raise FlightsNotFound()
+    monkeypatch.setattr(backend, "_fetch_google", none)
+    code = run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--json"])
+    assert code == 3 and "EMPTY_RESULTS" in capsys.readouterr().err
+
+
+# --- dates / multi / airports ----------------------------------------------
+
+def test_dates_scans_window(capsys):
+    code = run(["dates", "JFK", "LHR", "--depart-range", "2026-07-25..2026-07-26", "--json"])
+    out, err = capsys.readouterr().out, None
     assert code == 0
     env = json.loads(out)
-    assert env["dates"] and "price" in env["dates"][0]
+    assert len(env["dates"]) == 2
+    assert env["dates"][0]["price"] <= env["dates"][1]["price"]   # sorted cheapest-first
 
 
-def test_multi_bad_leg_is_usage_error(capsys):
-    code = run(["multi", "--leg", "JFK-CDG-2026-08-01", "--json"])
-    cap = capsys.readouterr()
+def test_dates_requires_range(capsys):
+    code = run(["dates", "JFK", "LHR", "--json"])
     assert code == 2
-    assert "USAGE" in cap.err or "leg" in cap.err.lower()
 
 
-def test_airports_search_and_empty(capsys):
+def test_multi_needs_two_legs(capsys):
+    code = run(["multi", "--leg", "JFK:CDG:2026-08-01", "--json"])
+    assert code == 2 and "2 legs" in capsys.readouterr().err
+
+
+def test_airports_search_real_resolution(capsys):
     code = run(["airports", "search", "london", "--json"])
     out = capsys.readouterr().out
     assert code == 0
     assert any(a["iata"] == "LHR" for a in json.loads(out)["airports"])
 
     code = run(["airports", "search", "zzzzz", "--json"])
-    cap = capsys.readouterr()
-    assert code == 3
-    assert "EMPTY_RESULTS" in cap.err
+    assert code == 3 and "EMPTY_RESULTS" in capsys.readouterr().err
 
 
-# --- token economy ----------------------------------------------------------
+# --- token economy / self-description --------------------------------------
 
 def test_limit_bounds_and_cursor(capsys):
-    code = run(["search", "JFK", "LHR", "--depart", "2026-08-01", "--limit", "1", "--json"])
-    out = capsys.readouterr().out
-    env = json.loads(out)
-    assert code == 0
-    assert env["count"] >= 2          # total preserved
-    assert len(env["itineraries"]) == 1
+    code = run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--limit", "1", "--json"])
+    env = json.loads(capsys.readouterr().out)
+    assert code == 0 and env["count"] == 2 and len(env["itineraries"]) == 1
     assert env["nextCursor"] == "1"
 
 
-def test_select_projection(capsys):
-    code = run(["search", "JFK", "LHR", "--depart", "2026-08-01",
-                "--select", "count,backend", "--json"])
-    out = capsys.readouterr().out
+def test_select_projects_each_record(capsys):
+    code = run(["search", "JFK", "LHR", "--depart", "2026-07-25",
+                "--select", "price,airlines", "--json"])
+    env = json.loads(capsys.readouterr().out)
     assert code == 0
-    assert set(json.loads(out).keys()) == {"count", "backend"}
+    assert env["itineraries"] and all(set(it.keys()) == {"price", "airlines"}
+                                      for it in env["itineraries"])
 
 
-# --- self-description -------------------------------------------------------
+def test_offset_pagination(capsys):
+    run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--limit", "1", "--json"])
+    p1 = json.loads(capsys.readouterr().out)
+    assert p1["offset"] == 0 and p1["nextCursor"] == "1" and len(p1["itineraries"]) == 1
+    run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--limit", "1",
+         "--offset", "1", "--json"])
+    p2 = json.loads(capsys.readouterr().out)
+    assert p2["offset"] == 1 and p2["nextCursor"] is None
+    assert p1["itineraries"][0] != p2["itineraries"][0]
+
+
+def test_bad_date_is_usage_not_schema_drift(capsys):
+    code = run(["search", "JFK", "LHR", "--depart", "08/01/2026", "--json"])
+    assert code == 2 and "USAGE" in capsys.readouterr().err
+
+
+def test_zero_adults_rejected(capsys):
+    code = run(["search", "JFK", "LHR", "--depart", "2026-07-25", "--adults", "0", "--json"])
+    assert code == 2
+
+
+def test_version_flag_prints_bare_string(capsys):
+    code = run(["--version"])
+    out = capsys.readouterr().out.strip()
+    assert code == 0 and out and " " not in out
+
 
 def test_schema_has_safety_and_gfly_exit_codes(capsys):
     code = run(["schema"])
-    out = capsys.readouterr().out
+    s = json.loads(capsys.readouterr().out)
     assert code == 0
-    s = json.loads(out)
     assert s["safety"]["read_only"] is True
-    assert s["exit_codes"]["blocked"] == 20
-    assert s["exit_codes"]["schema_drift"] == 21
+    assert s["exit_codes"]["blocked"] == 20 and s["exit_codes"]["schema_drift"] == 21
     assert "throttle" in s
 
 
 def test_did_you_mean(capsys):
     code = run(["serch", "JFK", "LHR"])
     err = capsys.readouterr().err
-    assert code == 2
-    assert "did you mean" in err and "search" in err
+    assert code == 2 and "did you mean" in err and "search" in err
 
 
 def test_agent_prints_skill(capsys):
     code = run(["agent"])
-    out = capsys.readouterr().out
-    assert code == 0
-    assert "# gfly" in out
-
-
-# --- auth -------------------------------------------------------------------
-
-def test_serpapi_auth_required(capsys, monkeypatch):
-    monkeypatch.delenv("GFLY_SERPAPI_KEY", raising=False)
-    code = run(["auth", "status", "--backend", "serpapi", "--json"])
-    cap = capsys.readouterr()
-    assert code == 4
-    assert "AUTH_REQUIRED" in cap.err
+    assert code == 0 and "# gfly" in capsys.readouterr().out
 
 
 # --- persistent throttle ----------------------------------------------------
 
 def test_throttle_fails_fast_within_interval(capsys, monkeypatch):
     monkeypatch.delenv("GFLY_NO_THROTTLE", raising=False)
-    args = ["search", "JFK", "LHR", "--depart", "2026-08-01", "--min-interval", "100", "--json"]
+    args = ["search", "JFK", "LHR", "--depart", "2026-07-25", "--min-interval", "100", "--json"]
     assert run(args) == 0
     capsys.readouterr()
-    code = run(args)                 # second call within the interval
-    err = capsys.readouterr().err
-    assert code == 7
-    payload = json.loads(err)
-    assert payload["code"] == "RATE_LIMITED"
-    assert payload["retryAfterSeconds"] > 0
+    code = run(args)
+    payload = json.loads(capsys.readouterr().err)
+    assert code == 7 and payload["code"] == "RATE_LIMITED" and payload["retryAfterSeconds"] > 0
 
 
 def test_no_throttle_bypasses(capsys, monkeypatch):
     monkeypatch.delenv("GFLY_NO_THROTTLE", raising=False)
-    args = ["search", "JFK", "LHR", "--depart", "2026-08-01", "--min-interval", "100",
+    args = ["search", "JFK", "LHR", "--depart", "2026-07-25", "--min-interval", "100",
             "--no-throttle", "--json"]
     assert run(args) == 0
     capsys.readouterr()
-    assert run(args) == 0            # not throttled
+    assert run(args) == 0

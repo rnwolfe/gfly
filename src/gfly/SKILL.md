@@ -27,13 +27,29 @@ just run it.
 - `gfly airports search london` — resolve a city/name to IATA codes (do this instead of guessing).
 
 Itinerary fields: `price`, `currency`, `airlines[]`, `flightNumbers[]`, `durationMinutes`,
-`stops`, `layovers[]{airport,minutes}`, `departure`, `arrival`, `origin`, `destination`,
-`co2Grams`, `co2DeltaPct`, `isBest`, `bookingToken`.
+`stops`, `layovers[]{airport,minutes}`, `departure`, `arrival` (local, no tz offset), `origin`,
+`destination`, `co2Grams`, `co2DeltaPct`, `isBest`, `bookingToken`.
+
+Backend differences worth knowing:
+- **google** exposes no `flightNumbers` (→ `[]`) or `bookingToken` (→ `null`), and can't split
+  best/other (→ `isBest:false`). **serpapi** provides all three.
+- For a **round-trip** (`--return`), the google itinerary describes the **outbound** legs and
+  `price` is the **round-trip total**.
+- `dates` has no upstream date-grid, so it runs **one search per day** — keep the window small.
+
+Examples:
+```bash
+gfly search JFK LHR --depart 2026-08-01 --sort price --limit 5 --json \
+  | jq '.itineraries[] | {price, airlines, stops, durationMinutes}'
+gfly search JFK LHR --depart 2026-08-01 --select price,airlines,stops --limit 3 --json
+gfly search JFK LHR --depart 2026-08-01 --limit 5 --offset 5 --json   # next page
+```
 
 ## Backends
 - `--backend google` (default) — reverse-engineered, free, no auth. Fragile + rate-limited.
+  `--proxy http://host:port` (or `GFLY_PROXY`) routes around IP blocks.
 - `--backend serpapi` — live SerpApi JSON; set `GFLY_SERPAPI_KEY` or
-  `gfly auth login --backend serpapi --token-stdin`.
+  `echo $KEY | gfly auth login --backend serpapi --token-stdin`. (`multi` is google-only.)
 
 ## Rate limits & blocking (important for loops)
 The `google` backend is scraped, so gfly enforces a **persistent politeness throttle** across

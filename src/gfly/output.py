@@ -24,10 +24,17 @@ class Writer:
         print(msg, file=self.stderr)
 
     def emit(self, value: Any) -> None:
+        """Apply --select then --limit, then render. For top-level lists/dicts."""
         g = json.loads(json.dumps(value, default=str))
         if self.select:
             g = _apply_select(g, self.select)
         g = self._apply_limit(g)
+        self.render(g)
+
+    def render(self, value: Any) -> None:
+        """Format-only (no --select / --limit). Callers that own projection/bounding
+        themselves (e.g. the enveloped commands) use this to avoid double-application."""
+        g = json.loads(json.dumps(value, default=str))
         if self.fmt == "json":
             self.emit_json(g)
         elif self.fmt == "tsv":
@@ -70,7 +77,15 @@ class Writer:
                       file=self.stdout)
         else:
             for r in rows:
-                print(sep.join(r), file=self.stdout)
+                # TSV must stay one-record-per-line: neutralize embedded tabs/newlines.
+                print(sep.join(c.replace("\t", " ").replace("\n", " ").replace("\r", " ")
+                               for c in r), file=self.stdout)
+
+
+def project(value: Any, sel: list[str]) -> Any:
+    """Public field projection (dot-paths). Used by enveloped commands to project the
+    primary records before building the envelope."""
+    return _apply_select(value, sel)
 
 
 def _apply_select(g: Any, sel: list[str]) -> Any:
