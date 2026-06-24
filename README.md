@@ -10,6 +10,7 @@
 [![pypi](https://img.shields.io/pypi/v/gfly?color=F5B70A&label=pypi)](https://pypi.org/project/gfly/)
 [![python](https://img.shields.io/badge/python-%E2%89%A53.10-F5B70A)](https://pypi.org/project/gfly/)
 [![license](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-2ECC71)](#license)
+[![Agent CLI Guidelines: Full](https://aclig.dev/badge/agent-cli-guidelines-full.svg)](https://aclig.dev/conformance/)
 
 **[gfly.sh](https://gfly.sh)** · **[docs](https://docs.gfly.sh)** · the read-only Google Flights CLI for agents
 
@@ -174,6 +175,9 @@ Errors are structured on stderr: `{ "error", "code", "remediation" }` (+ `retryA
 throttle/block), so an agent can back off, switch backend, or report instead of crashing.
 
 ## For agents
+
+> Follows the [Agent CLI Guidelines](https://aclig.dev) (v0.1, **Full**) — read-only by default,
+> structured, self-describing, stable exit codes.
 
 ```bash
 gfly agent        # prints the embedded SKILL.md — the full usage contract, in the binary

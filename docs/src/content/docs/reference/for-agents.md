@@ -254,4 +254,15 @@ gfly search JFK LHR \
   --json                # stable envelope (also the default when not a TTY)
 ```
 
+## Conformance
+
+gfly follows the [Agent CLI Guidelines](https://aclig.dev) at **v0.1, Full** — every Core invariant
+(read-only by default, stdout/stderr discipline, stable `--json` schema, documented exit codes,
+`--no-input` hard-fail, machine-readable `schema`, structured errors, bounded output, untrusted-text
+fencing, append-only fields) plus the Full SHOULDs (embedded `agent` guide, `--select` + pagination,
+example-led help, `auth`/`doctor`, prompt-injection fencing on by default). It is listed as a
+[worked example](https://aclig.dev/badge/) of the standard.
+
+[![Agent CLI Guidelines: Full](https://aclig.dev/badge/agent-cli-guidelines-full.svg)](https://aclig.dev/conformance/)
+
 For related topics see [backends](/guides/backends/), [rate limits](/guides/rate-limits/), [authentication](/guides/authentication/), [output schema](/reference/output-schema/), and [exit codes](/reference/exit-codes/).
