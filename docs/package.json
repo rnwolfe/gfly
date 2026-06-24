@@ -1,12 +1,14 @@
 {
-  "name": "docs",
+  "name": "gfly-docs",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.27.0",
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
+    "dev": "astro dev --host 0.0.0.0",
+    "start": "astro dev --host 0.0.0.0",
     "build": "astro build",
-    "preview": "astro preview",
+    "preview": "astro preview --host 0.0.0.0",
     "astro": "astro"
   },
   "dependencies": {
