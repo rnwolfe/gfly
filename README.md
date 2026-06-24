@@ -11,6 +11,8 @@
 [![python](https://img.shields.io/badge/python-%E2%89%A53.10-F5B70A)](https://pypi.org/project/gfly/)
 [![license](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-2ECC71)](#license)
 
+**[gfly.sh](https://gfly.sh)** · the read-only Google Flights CLI for agents
+
 </div>
 
 ```text

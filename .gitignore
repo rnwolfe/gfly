@@ -14,3 +14,4 @@ dist/
 
 # uv
 # (uv.lock IS committed — do not ignore it)
+.vercel

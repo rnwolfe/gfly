@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-06-23
+
+First public release.
+
 ### Added
 - `search` (one-way / round-trip), `dates` (price calendar), `multi` (multi-city), and
   `airports search` (offline IATA resolution) commands.
@@ -20,4 +24,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `auth login|status|logout` (OS keyring + `0600` file fallback, stdin-only secrets); real `doctor`.
 - Prompt-injection hardening: third-party text sanitized and fenced as untrusted by default.
 
-[Unreleased]: https://github.com/rnwolfe/gfly/commits/main
+[Unreleased]: https://github.com/rnwolfe/gfly/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/rnwolfe/gfly/releases/tag/v0.1.0
