@@ -1,20 +1,53 @@
 name: release
 
+# Tag-driven release: build → checksums → build-provenance attestation (SLSA L2) →
+# PyPI Trusted Publishing (OIDC) → GitHub Release with artifacts + SHA256SUMS.
+# Prereqs (one-time, manual): configure PyPI Trusted Publishing for owner=rnwolfe,
+# repo=gfly, workflow=release.yml, environment=pypi.
+
 on:
   push:
     tags: ["v*"]
 
+permissions:
+  contents: write        # create the GitHub Release
+  id-token: write        # PyPI OIDC + provenance signing (no stored secrets)
+  attestations: write    # actions/attest-build-provenance
+
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
     environment: pypi
-    permissions:
-      id-token: write          # PyPI Trusted Publishing (OIDC) — no stored secrets
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Build
+
+      - name: Build sdist + wheel
         run: uv build
-      - name: Publish to PyPI
-        run: uv publish        # OIDC; no token needed when Trusted Publishing is configured
+
+      - name: Generate checksums
+        run: cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS
+
+      # SLSA L2 build provenance. Skipped on private user-owned repos (the action
+      # fails there and would block the publish).
+      - name: Attest build provenance
+        if: ${{ !github.event.repository.private }}
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: "dist/*.whl, dist/*.tar.gz"
+
+      - name: Publish to PyPI (Trusted Publishing / OIDC)
+        run: uv publish
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/*.whl dist/*.tar.gz dist/SHA256SUMS \
+            --title "${GITHUB_REF_NAME}" \
+            --notes "See [CHANGELOG.md](https://github.com/rnwolfe/gfly/blob/main/CHANGELOG.md). Verify provenance: \`gh attestation verify <artifact> -R rnwolfe/gfly\`."

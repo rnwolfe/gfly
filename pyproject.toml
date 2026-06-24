@@ -4,7 +4,7 @@ version = "0.0.1"
 description = "Agent-first, read-only CLI for searching Google Flights (itineraries, price calendar, multi-city)."
 readme = "README.md"
 requires-python = ">=3.10"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 authors = [{ name = "Ryan Wolfe" }]
 keywords = ["google-flights", "flights", "cli", "agent", "llm", "travel"]
 dependencies = [

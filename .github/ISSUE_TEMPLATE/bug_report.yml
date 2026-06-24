@@ -1,0 +1,61 @@
+name: Bug report
+description: Something in gfly behaves incorrectly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! For **security** issues do NOT use this form — see SECURITY.md.
+        Please **redact any secrets** (SerpApi keys, cookies) before pasting output.
+  - type: input
+    id: version
+    attributes:
+      label: gfly version
+      description: Output of `gfly --version`.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      options: ["google (default)", "serpapi"]
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS / Python
+      placeholder: "Ubuntu 24.04 / Python 3.12 (uv)"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact command you ran (redact secrets).
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected vs. what happened
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Structured error / exit code
+      description: Paste the JSON error from stderr and the exit code (`echo $?`).
+      render: json
+    validations:
+      required: false
+  - type: textarea
+    id: schema
+    attributes:
+      label: gfly doctor output
+      description: Output of `gfly doctor --json` (secrets are redacted automatically).
+      render: json
+    validations:
+      required: false

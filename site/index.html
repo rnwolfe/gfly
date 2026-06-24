@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>gfly — Google Flights for agents</title>
+<meta name="description" content="A read-only, JSON-first Google Flights CLI an LLM agent can drive — no API key, no account, no OAuth." />
+<meta property="og:title" content="gfly ✈ — Google Flights for agents" />
+<meta property="og:description" content="Read-only, JSON-first flight search CLI. No key, no account. Built for LLM agents." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈</text></svg>" />
+<style>
+  :root{
+    --bg:#0B0E13; --panel:#11151C; --flap:#161B22; --flap-edge:#0A0D12;
+    --amber:#F5B70A; --amber-dim:#9c7a1a; --green:#2ECC71; --red:#E74C3C;
+    --ink:#D7DCE2; --muted:#6B7280; --line:#1F2731;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #14202b 0%, transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--amber);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+
+  /* ---- hero ---- */
+  header{padding:56px 0 8px;text-align:center}
+  .kicker{letter-spacing:.5em;color:var(--muted);font-size:12px;text-transform:uppercase}
+  h1{font-size:clamp(56px,12vw,128px);margin:.08em 0 0;letter-spacing:.04em;color:var(--amber);
+     text-shadow:0 0 28px rgba(245,183,10,.25)}
+  h1 .plane{display:inline-block;transform:translateY(-6px) rotate(-8deg)}
+  .tag{font-size:clamp(15px,2.4vw,20px);color:var(--ink);margin:.2em auto 0;max-width:40ch}
+  .tag b{color:var(--amber)}
+  .sub{color:var(--muted);margin-top:.4em;font-size:14px}
+
+  /* ---- install ---- */
+  .install{display:flex;gap:10px;justify-content:center;align-items:stretch;margin:26px auto 4px;flex-wrap:wrap}
+  .cmd{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+       padding:14px 16px;display:flex;align-items:center;gap:12px;min-width:min(560px,92vw)}
+  .cmd code{color:var(--ink);font-size:15px;white-space:nowrap;overflow:auto}
+  .cmd .dollar{color:var(--green)}
+  .cmd button{margin-left:auto;background:var(--amber);color:#10130a;border:0;border-radius:7px;
+       padding:7px 12px;font-weight:700;cursor:pointer;font-family:inherit}
+  .cmd button:active{transform:translateY(1px)}
+  .links{display:flex;gap:18px;justify-content:center;margin-top:14px;font-size:14px;flex-wrap:wrap}
+  .links .pill{border:1px solid var(--line);border-radius:999px;padding:6px 14px;color:var(--ink)}
+
+  /* ---- split-flap board ---- */
+  .board{margin:44px auto 8px;background:linear-gradient(#0d1219,#0a0e14);
+    border:1px solid var(--line);border-radius:14px;padding:18px;overflow-x:auto;
+    box-shadow:0 30px 80px -40px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.03)}
+  .board-top{display:flex;justify-content:space-between;align-items:center;
+    color:var(--amber);letter-spacing:.22em;font-size:13px;padding:2px 6px 12px}
+  .board-top .live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;
+    background:var(--green);margin-right:8px;box-shadow:0 0 8px var(--green);animation:blink 1.6s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  table{border-collapse:collapse;width:100%;min-width:680px}
+  th{color:var(--muted);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+     text-align:left;padding:0 6px 10px}
+  td{padding:5px 6px}
+  .row{height:42px}
+  /* a cell is a run of flaps */
+  .flaps{display:flex;gap:3px}
+  .flap{position:relative;width:17px;height:30px;border-radius:4px;
+    background:linear-gradient(var(--flap),#10141a);
+    border:1px solid var(--flap-edge);
+    color:var(--amber);font-size:19px;font-weight:700;text-align:center;line-height:30px;
+    overflow:hidden;box-shadow:inset 0 -1px 0 rgba(0,0,0,.6)}
+  .flap::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.55)}
+  .flap.flipping{animation:flip .12s linear}
+  @keyframes flip{0%{transform:rotateX(0)}49%{transform:rotateX(-90deg)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+  .flap.status-on{color:var(--green)} .flap.status-blk{color:var(--red)}
+
+  /* ---- panels ---- */
+  .demo{margin:42px auto 0;text-align:center}
+  .demo img{max-width:100%;border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 30px 80px -50px rgba(0,0,0,.9)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:40px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .card h3{margin:0 0 6px;color:var(--amber);font-size:15px;letter-spacing:.04em}
+  .card p{margin:0;color:var(--muted);font-size:13.5px}
+  .gates{margin:36px 0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 6px}
+  .gates table{min-width:0}
+  .gates td{font-size:13px;padding:6px 14px;border-bottom:1px solid var(--line)}
+  .gates tr:last-child td{border:0}
+  .gc{color:var(--amber);font-weight:700;width:46px}
+  .gc.warn{color:var(--red)}
+  footer{color:var(--muted);text-align:center;padding:40px 0 60px;font-size:13px}
+  h2.sec{letter-spacing:.04em;color:var(--ink);margin:48px 0 4px;font-size:20px}
+  h2.sec span{color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">terminal · gate · no boarding pass required</div>
+    <h1><span class="plane">✈</span> gfly</h1>
+    <p class="tag"><b>Google Flights for agents.</b> A read-only, JSON-first flight-search CLI an LLM can drive.</p>
+    <p class="sub">no API key · no account · no OAuth</p>
+  </header>
+
+  <div class="install">
+    <div class="cmd">
+      <span class="dollar">$</span>
+      <code id="cmd">uvx gfly search JFK LHR --depart 2026-08-15</code>
+      <button onclick="copyCmd()" id="copyBtn">copy</button>
+    </div>
+  </div>
+  <div class="links">
+    <a class="pill" href="https://github.com/rnwolfe/gfly">GitHub →</a>
+    <a class="pill" href="https://pypi.org/project/gfly/">PyPI</a>
+    <a class="pill" href="https://github.com/rnwolfe/gfly#readme">Docs</a>
+  </div>
+
+  <!-- live split-flap departures board -->
+  <div class="board" aria-hidden="true">
+    <div class="board-top"><span>GFLY · DEPARTURES</span><span class="live">LIVE</span></div>
+    <table>
+      <thead><tr><th>Gate</th><th>Destination</th><th>Status</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <div class="demo">
+    <img src="gfly.gif" alt="gfly demo: airports search, schema, validation, agent" />
+  </div>
+
+  <h2 class="sec">Built for the <span>agent loop</span></h2>
+  <div class="grid">
+    <div class="card"><h3>JSON by default</h3><p>Stable, versioned <code>schemaVersion</code> envelope when piped. Tables for humans at a TTY.</p></div>
+    <div class="card"><h3>Self-describing</h3><p><code>gfly schema</code> and an embedded <code>gfly agent</code> contract — zero external files.</p></div>
+    <div class="card"><h3>Semantic exit codes</h3><p>Real failures get real codes: <code>BLOCKED</code>, <code>SCHEMA_DRIFT</code>, <code>RATE_LIMITED</code> + <code>retryAfterSeconds</code>.</p></div>
+    <div class="card"><h3>Token-bounded</h3><p><code>--limit</code> / <code>--offset</code> / <code>--select</code> so an agent never drowns in 40 itineraries.</p></div>
+    <div class="card"><h3>Polite by design</h3><p>A persistent, cross-process throttle that survives the fresh-process-per-call model.</p></div>
+    <div class="card"><h3>Read-only</h3><p>It searches. It cannot book or mutate anything. Safe to hand an autonomous agent.</p></div>
+  </div>
+
+  <h2 class="sec">Gate status — <span>exit codes</span></h2>
+  <div class="gates">
+    <table>
+      <tr><td class="gc">0</td><td>ok</td><td class="gc">7</td><td>rate limited</td></tr>
+      <tr><td class="gc">2</td><td>usage / parse</td><td class="gc">8</td><td>retryable (transient)</td></tr>
+      <tr><td class="gc">3</td><td>empty results</td><td class="gc">13</td><td>input required</td></tr>
+      <tr><td class="gc">4</td><td>auth required</td><td class="gc warn">20</td><td>BLOCKED (CAPTCHA / soft-block)</td></tr>
+      <tr><td class="gc">5</td><td>not found</td><td class="gc warn">21</td><td>SCHEMA_DRIFT (upstream changed)</td></tr>
+    </table>
+  </div>
+
+  <footer>
+    <code>gfly</code> · read-only Google Flights CLI · MIT OR Apache-2.0 ·
+    <a href="https://github.com/rnwolfe/gfly">rnwolfe/gfly</a><br/>
+    The default backend rides a reverse-engineered, undocumented endpoint — fragile by nature.
+    That's why every failure is a structured, actionable error.
+  </footer>
+
+</div>
+
+<script>
+  function copyCmd(){
+    navigator.clipboard.writeText(document.getElementById('cmd').textContent).then(()=>{
+      const b=document.getElementById('copyBtn'); b.textContent='copied ✓';
+      setTimeout(()=>b.textContent='copy',1400);
+    });
+  }
+
+  // ---- split-flap board ----
+  const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789→ ·";
+  const COLW = {dest:22};
+  const ROWS = [
+    {gate:"SEARCH",  dest:["JFK → LHR ITINERARIES","SFO → NRT NONSTOP","BOS → CDG CHEAPEST"], status:"ON TIME"},
+    {gate:"DATES",   dest:["CHEAPEST-DAY CALENDAR","PRICE GRID AUG 1-7"],                     status:"ON TIME"},
+    {gate:"MULTI",   dest:["MULTI-CITY JFK·CDG·FCO"],                                          status:"ON TIME"},
+    {gate:"AIRPORTS",dest:["RESOLVE IATA OFFLINE","TOKYO → NRT · HND"],                        status:"ON TIME"},
+    {gate:"DOCTOR",  dest:["HEALTH + THROTTLE","CONNECTIVITY OK"],                             status:"ON TIME"},
+    {gate:"SCHEMA",  dest:["MACHINE-READABLE","STABLE CONTRACT"],                              status:"BOARDING"},
+  ];
+
+  function makeCells(parent,n){
+    const cells=[];
+    const box=document.createElement('div'); box.className='flaps';
+    for(let i=0;i<n;i++){const f=document.createElement('span');f.className='flap';f.textContent=' ';box.appendChild(f);cells.push(f);}
+    parent.appendChild(box); return cells;
+  }
+  function pad(s,n){s=(s||'').toUpperCase().slice(0,n);return s+' '.repeat(n-s.length);}
+
+  // flip a single cell to a target glyph with a short scramble
+  function flipTo(cell,target,extra){
+    let steps=2+Math.floor(Math.random()*3);
+    const tick=()=>{
+      cell.classList.add('flipping');
+      setTimeout(()=>{
+        cell.classList.remove('flipping');
+        if(steps--<=0){ cell.textContent=target; if(extra){cell.classList.remove('status-on','status-blk');cell.classList.add(extra);} }
+        else { cell.textContent=GLYPHS[Math.floor(Math.random()*GLYPHS.length)]; tick(); }
+      },120);
+    };
+    tick();
+  }
+  function setRow(cells,text,extra){
+    const t=pad(text,cells.length);
+    cells.forEach((c,i)=>setTimeout(()=>flipTo(c,t[i],extra),i*45));
+  }
+
+  const tbody=document.getElementById('rows');
+  const state=ROWS.map(r=>{
+    const tr=document.createElement('tr'); tr.className='row';
+    const g=document.createElement('td'); const d=document.createElement('td');
+    const s=document.createElement('td');
+    tr.append(g,d,s); tbody.appendChild(tr);
+    return {
+      g:makeCells(g,8), d:makeCells(d,COLW.dest), s:makeCells(s,8),
+      conf:r, di:0
+    };
+  });
+
+  // initial board
+  state.forEach((st,i)=>setTimeout(()=>{
+    setRow(st.g,st.conf.gate);
+    setRow(st.d,st.conf.dest[0]);
+    setRow(st.s,st.conf.status, st.conf.status==="ON TIME"?'status-on':'');
+  }, 250+i*160));
+
+  // live: cycle a destination + occasionally flip a status (the board "updates")
+  setInterval(()=>{
+    const st=state[Math.floor(Math.random()*state.length)];
+    if(st.conf.dest.length>1){ st.di=(st.di+1)%st.conf.dest.length; setRow(st.d,st.conf.dest[st.di]); }
+  },2600);
+  setInterval(()=>{
+    const st=state[3+Math.floor(Math.random()*3)]; // doctor/schema-ish rows
+    const blocked=Math.random()<0.5;
+    setRow(st.s, blocked?"BLOCKED":"ON TIME", blocked?'status-blk':'status-on');
+  },5200);
+</script>
+</body>
+</html>

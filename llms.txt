@@ -1,0 +1,30 @@
+# gfly
+
+> Agent-first, read-only CLI for searching Google Flights. JSON-by-default with a stable, versioned
+> schema; semantic exit codes; token-bounded output; swappable backend (reverse-engineered Google
+> Flights via fast-flights, or SerpApi). The default backend needs no API key, no account, no OAuth.
+
+The fastest way for an agent to learn the tool is to run it:
+
+- `gfly agent` — prints the embedded SKILL.md (the full usage contract, no network needed).
+- `gfly schema` — JSON command tree, every flag, the exit-code table, live safety/throttle state, env vars.
+- `gfly --help` — example-led help.
+
+## Commands
+- `gfly search <from> <to> --depart YYYY-MM-DD [--return …] [--cabin …] [--stops …] [--sort …]`
+- `gfly dates <from> <to> --depart-range START..END` — cheapest price per day (one search per day).
+- `gfly multi --leg FROM:TO:DATE …` — multi-city (google backend only).
+- `gfly airports search <query>` — offline IATA resolution.
+- `gfly doctor` — auth/keyring/connectivity/throttle health.
+
+## Contract
+- Output: stdout=data, stderr=notes/errors. `--json` / `--format json|plain|tsv`, `--select`, `--limit`, `--offset`.
+- Exit codes: 0 ok · 2 usage · 3 empty · 4 auth · 5 not-found · 7 rate-limited · 8 retryable · 13 input-required · 20 BLOCKED · 21 SCHEMA_DRIFT.
+- Errors are structured: `{error, code, remediation}` (+ `retryAfterSeconds` on throttle/block).
+- Read-only: it searches; it cannot book or mutate.
+
+## Docs
+- README: https://github.com/rnwolfe/gfly#readme
+- Source: https://github.com/rnwolfe/gfly
+- Contributing: https://github.com/rnwolfe/gfly/blob/main/CONTRIBUTING.md
+- Security: https://github.com/rnwolfe/gfly/blob/main/SECURITY.md

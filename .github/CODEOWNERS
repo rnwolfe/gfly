@@ -1,0 +1,7 @@
+# Default owner for everything in this repo.
+* @rnwolfe
+
+# The agent-CLI contract surface — review with extra care.
+/src/gfly/output.py   @rnwolfe
+/src/gfly/errors.py   @rnwolfe
+/tests/test_schema_snapshot.py @rnwolfe

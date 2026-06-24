@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security vulnerability
+    url: https://github.com/rnwolfe/gfly/security/advisories/new
+    about: Report security issues privately — never via a public issue. See SECURITY.md.
+  - name: 💬 Questions & ideas
+    url: https://github.com/rnwolfe/gfly/discussions
+    about: Ask questions, share recipes, or discuss before filing a feature request.

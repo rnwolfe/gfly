@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest a capability or improvement for gfly.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        gfly is **read-only by design** (it searches; it does not book) and **agent-first**
+        (stable JSON, structured errors, bounded output). Requests that respect those
+        constraints are most likely to land.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+      description: What are you trying to do, and what's blocking you today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Command surface, flags, and the output fields you'd expect.
+    validations:
+      required: true
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Which backend(s)?
+      multiple: true
+      options: ["google", "serpapi", "both / new backend"]
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

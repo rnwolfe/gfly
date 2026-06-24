@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use gfly, please cite it using these metadata."
+title: "gfly: an agent-first, read-only Google Flights CLI"
+abstract: >-
+  gfly is a read-only, JSON-first command-line tool for searching Google Flights,
+  engineered to be driven by LLM agents: stable versioned output schema, machine-readable
+  self-description, semantic exit codes, token-bounded output, a persistent politeness
+  throttle, and a swappable backend (reverse-engineered Google Flights or SerpApi).
+type: software
+authors:
+  - family-names: Wolfe
+    given-names: Ryan
+license: "MIT OR Apache-2.0"
+repository-code: "https://github.com/rnwolfe/gfly"
+url: "https://github.com/rnwolfe/gfly"
+keywords:
+  - google-flights
+  - cli
+  - agent
+  - llm
+  - flight-search
+  - travel

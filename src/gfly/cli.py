@@ -196,9 +196,6 @@ def _emit_envelope(rt: Runtime, query: dict, key: str, items: list, *,
     sliced = window[:lim] if lim and lim > 0 else window
     shown_end = off + len(sliced)
     truncated = shown_end < total
-    if off or truncated:
-        rt.out.info(f"note: {key}[{off}:{shown_end}] of {total} "
-                    f"(paginate with --offset {shown_end})")
     env = {"schemaVersion": SCHEMA_VERSION, "backend": rt.backend, "query": query}
     if untrusted and rt.wrap_untrusted:
         env["_warning"] = _UNTRUSTED_NOTE
@@ -210,7 +207,20 @@ def _emit_envelope(rt: Runtime, query: dict, key: str, items: list, *,
     env["offset"] = off
     env[key] = sliced
     env["nextCursor"] = str(shown_end) if truncated else None
-    rt.out.render(env)
+
+    if rt.out.fmt == "json":
+        # agents get the full stable envelope on stdout; pagination hint on stderr
+        if off or truncated:
+            rt.out.info(f"note: {key}[{off}:{shown_end}] of {total} "
+                        f"(paginate with --offset {shown_end})")
+        rt.out.render(env)
+    else:
+        # humans get a clean table of the records; metadata goes to stderr
+        summary = f"{rt.backend} · {total} {key}"
+        if off or truncated:
+            summary += f" · showing {off}-{shown_end} (--offset {shown_end} for next page)"
+        rt.out.info(summary)
+        rt.out.render(sliced)
 
 
 def _check_date(value: str, field: str) -> None:
