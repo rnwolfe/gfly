@@ -1,0 +1,81 @@
+---
+title: gfly
+description: A read-only, JSON-first Google Flights CLI an LLM agent can drive — no API key, no account, no OAuth.
+template: splash
+hero:
+  tagline: Google Flights for agents. A read-only, JSON-first flight-search CLI an LLM can drive — no API key, no account, no OAuth.
+  image:
+    file: ../../assets/plane.svg
+  actions:
+    - text: Install
+      link: /start/installation/
+      icon: right-arrow
+      variant: primary
+    - text: Quickstart
+      link: /start/quickstart/
+      icon: open-book
+      variant: minimal
+    - text: GitHub
+      link: https://github.com/rnwolfe/gfly
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<div class="gfly-board" aria-hidden="true">
+  <div class="gfly-board-top"><span>GFLY · DEPARTURES</span><span class="live">LIVE</span></div>
+  <table>
+    <thead><tr><th>Gate</th><th>Destination</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>SEARCH</td><td class="dest">JFK → LHR · ITINERARIES</td><td class="ok">ON TIME</td></tr>
+      <tr><td>DATES</td><td class="dest">CHEAPEST-DAY CALENDAR</td><td class="ok">ON TIME</td></tr>
+      <tr><td>MULTI</td><td class="dest">MULTI-CITY · JFK·CDG·FCO</td><td class="ok">ON TIME</td></tr>
+      <tr><td>AIRPORTS</td><td class="dest">RESOLVE IATA · OFFLINE</td><td class="ok">ON TIME</td></tr>
+      <tr><td>DOCTOR</td><td class="dest">HEALTH + THROTTLE STATE</td><td class="ok">ON TIME</td></tr>
+      <tr><td>SCHEMA</td><td class="dest">MACHINE-READABLE CONTRACT</td><td class="board">BOARDING</td></tr>
+    </tbody>
+  </table>
+</div>
+
+## Try it in 10 seconds — no install, no key
+
+```bash
+uvx gfly search JFK LHR --depart 2026-08-15
+```
+
+That's the whole onboarding. The default backend is unauthenticated — the agent (or you) just runs it.
+
+<CardGrid>
+  <Card title="JSON by default" icon="seti:json">
+    A stable, versioned `schemaVersion` envelope when piped; readable tables at a TTY.
+  </Card>
+  <Card title="Self-describing" icon="open-book">
+    `gfly schema` and an embedded `gfly agent` contract — zero external files.
+  </Card>
+  <Card title="Semantic exit codes" icon="error">
+    Real failures get real codes: `BLOCKED`, `SCHEMA_DRIFT`, `RATE_LIMITED` + `retryAfterSeconds`.
+  </Card>
+  <Card title="Token-bounded" icon="bars">
+    `--limit` / `--offset` / `--select` so an agent never drowns in itineraries.
+  </Card>
+  <Card title="Polite by design" icon="approve-check">
+    A persistent, cross-process throttle that survives the fresh-process-per-call model.
+  </Card>
+  <Card title="Read-only" icon="seti:lock">
+    It searches. It cannot book or mutate. Safe to hand an autonomous agent.
+  </Card>
+</CardGrid>
+
+## Why gfly
+
+Google has had **no public flights API since QPX shut down in 2018**. The community tools that fill
+the gap are built for humans (Rich TUIs) or hand agents an MCP server with a self-declared-unstable
+JSON shape. `gfly` is engineered for an **LLM agent in a loop** — see [Design & risks](/explanation/design/).
+
+:::caution[Reverse-engineered by default]
+The default `google` backend rides an **undocumented** Google Flights endpoint. It is fragile by
+nature and **will** break when Google changes its response — which is exactly why gfly surfaces
+`SCHEMA_DRIFT` / `BLOCKED` as structured, actionable errors and ships a swappable
+[SerpApi backend](/guides/backends/) as the reliability escape hatch.
+:::

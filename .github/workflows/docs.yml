@@ -1,0 +1,31 @@
+# Docs build gate: the Starlight site must type-check and build before merge.
+# docs/ is a standalone Astro project (its own package.json — not a workspace).
+name: docs
+
+on:
+  pull_request:
+    paths: ["docs/**", ".github/workflows/docs.yml"]
+  push:
+    branches: [main]
+    paths: ["docs/**", ".github/workflows/docs.yml"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so Starlight `lastUpdated` git dates are correct
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: docs/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec astro check   # frontmatter / slugs / types
+      - run: pnpm build              # MDX errors + regenerates llms.txt

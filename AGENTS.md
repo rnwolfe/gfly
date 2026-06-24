@@ -36,6 +36,25 @@ python -m gfly --help        # module entry also works
 - **Heavy imports stay lazy** — inside backend functions, never at module top (keeps `--help`/`schema` fast).
 - Keep `uv run pytest -q` green before every commit; the `schema` test is the contract gate.
 
-## Handoff state
-This is a **scaffold**: it compiles, runs on stub data, and passes contract tests. Next stage is
-`cli-implement` — wire the real engines + auth, replacing `backend.py` / `auth.py`.
+## Status
+**Shipped** — published to PyPI (`gfly`), GitHub (`rnwolfe/gfly`), landing at https://gfly.sh, docs at
+https://docs.gfly.sh. The engines (`backend.py`) and auth (`auth.py`) are real.
+
+## Documentation (keep it current — non-negotiable)
+
+Docs live in `docs/` — a standalone Astro Starlight site (its own `package.json`; not a workspace).
+Content is Markdown/MDX under `docs/src/content/docs/`. The build emits `llms.txt` / `llms-full.txt`.
+
+- Dev: `cd docs && pnpm install && pnpm dev --host 0.0.0.0`
+- Build (regenerates `llms.txt`): `cd docs && pnpm build`
+
+**Docs are part of "done." A change is not complete until its docs are updated in the SAME commit/PR.**
+
+When you change any **public surface**, update the matching `docs/` page in the same change:
+- CLI commands, flags, output fields, or exit codes → `reference/` + the relevant guide
+- Backends, auth, throttle behavior → `guides/`
+- Config keys / environment variables / defaults → `reference/commands.md`
+
+On a **release**: update `CHANGELOG.md`, bump version references in docs, and run `cd docs && pnpm build`
+so `llms.txt` regenerates. Each docs page has `owner` / `lastReviewed` frontmatter — refresh
+`lastReviewed` when you meaningfully revise a page. If a code change has no doc impact, say so in the PR.

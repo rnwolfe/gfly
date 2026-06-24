@@ -1,0 +1,111 @@
+/* gfly docs theme — matches the gfly.sh split-flap departure-board landing.
+   Amber (#F5B70A) on near-black (#0B0E13), JetBrains Mono, always-dark. */
+
+:root {
+  /* brand palette (mirrors site/index.html) */
+  --gfly-bg: #0B0E13;
+  --gfly-panel: #11151C;
+  --gfly-flap: #161B22;
+  --gfly-flap-edge: #0A0D12;
+  --gfly-amber: #F5B70A;
+  --gfly-amber-dim: #9c7a1a;
+  --gfly-green: #2ECC71;
+  --gfly-red: #E74C3C;
+  --gfly-ink: #D7DCE2;
+  --gfly-muted: #6B7280;
+  --gfly-line: #1F2731;
+
+  --sl-font: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sl-font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  /* Starlight accent → amber */
+  --sl-color-accent-low: #3a2c05;
+  --sl-color-accent: #F5B70A;
+  --sl-color-accent-high: #ffd24a;
+}
+
+/* Force the dark palette regardless of OS/toggle to match the landing. */
+:root,
+:root[data-theme="dark"],
+:root[data-theme="light"] {
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #eceef2;
+  --sl-color-gray-2: #c0c6cf;
+  --sl-color-gray-3: var(--gfly-muted);
+  --sl-color-gray-4: #3a4350;
+  --sl-color-gray-5: var(--gfly-line);
+  --sl-color-gray-6: #131820;
+  --sl-color-gray-7: #0e131a;
+  --sl-color-black: var(--gfly-bg);
+
+  --sl-color-bg: var(--gfly-bg);
+  --sl-color-bg-nav: rgba(11, 14, 19, 0.85);
+  --sl-color-bg-sidebar: #0c1016;
+  --sl-color-bg-inline-code: #161b22;
+  --sl-color-hairline: var(--gfly-line);
+  --sl-color-hairline-light: var(--gfly-line);
+  --sl-color-text: var(--gfly-ink);
+  --sl-color-text-accent: var(--gfly-amber);
+}
+
+/* subtle aviation glow behind the header, like the landing hero */
+body {
+  background:
+    radial-gradient(1200px 520px at 50% -160px, #14202b 0%, transparent 60%),
+    var(--gfly-bg);
+}
+
+/* brand: site title in amber */
+.site-title,
+a.site-title { color: var(--gfly-amber); letter-spacing: 0.04em; font-weight: 700; }
+
+/* links & headings */
+.sl-markdown-content a { color: var(--gfly-amber); text-decoration-color: var(--gfly-amber-dim); }
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3 { letter-spacing: 0.02em; }
+.sl-markdown-content h2 { border-bottom: 1px solid var(--gfly-line); padding-bottom: 0.3em; }
+
+/* the on-time pulse used in the hero board */
+@keyframes gfly-blink { 50% { opacity: 0.25; } }
+
+/* ---- splash hero departures board (index page) ---- */
+.gfly-board {
+  margin: 1.5rem 0 0;
+  background: linear-gradient(#0d1219, #0a0e14);
+  border: 1px solid var(--gfly-line);
+  border-radius: 14px;
+  padding: 16px;
+  overflow-x: auto;
+  box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  font-family: var(--sl-font-mono);
+}
+.gfly-board-top {
+  display: flex; justify-content: space-between; align-items: center;
+  color: var(--gfly-amber); letter-spacing: 0.22em; font-size: 12px; padding: 2px 4px 12px;
+}
+.gfly-board-top .live::before {
+  content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gfly-green); margin-right: 8px; box-shadow: 0 0 8px var(--gfly-green);
+  animation: gfly-blink 1.6s infinite;
+}
+.gfly-board table { width: 100%; border-collapse: collapse; margin: 0; }
+.gfly-board th {
+  color: var(--gfly-muted); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  text-align: left; padding: 0 8px 8px; border: 0;
+}
+.gfly-board td {
+  padding: 7px 8px; border-top: 1px solid var(--gfly-line);
+  color: var(--gfly-amber); font-weight: 700; font-size: 14px; white-space: nowrap;
+}
+.gfly-board td.dest { color: var(--gfly-ink); font-weight: 500; }
+.gfly-board td.ok { color: var(--gfly-green); }
+.gfly-board td.board { color: var(--gfly-amber); }
+.gfly-board tr td { background: transparent; }
+
+/* tighten Starlight's hero so the board sits right under it */
+.hero { padding-bottom: 0.5rem; }
+.hero h1 { color: var(--gfly-amber); text-shadow: 0 0 24px rgba(245, 183, 10, 0.22); }
+
+/* code blocks: amber-tinted frame to match the terminal vibe */
+.expressive-code .frame { border-radius: 10px; }
