@@ -20,6 +20,8 @@ jobs:
         with:
           fetch-depth: 0 # full history so Starlight `lastUpdated` git dates are correct
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10   # repo root has no package.json, so pin pnpm here
       - uses: actions/setup-node@v4
         with:
           node-version: 22
