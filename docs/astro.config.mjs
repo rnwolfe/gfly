@@ -41,7 +41,11 @@ export default defineConfig({
             href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap",
           },
         },
-        { tag: "meta", attrs: { property: "og:image", content: "https://gfly.sh/gfly.gif" } },
+        { tag: "meta", attrs: { property: "og:image", content: "https://gfly.sh/og.png" } },
+        { tag: "meta", attrs: { property: "og:image:width", content: "1200" } },
+        { tag: "meta", attrs: { property: "og:image:height", content: "630" } },
+        { tag: "meta", attrs: { name: "twitter:card", content: "summary_large_image" } },
+        { tag: "meta", attrs: { name: "twitter:image", content: "https://gfly.sh/og.png" } },
       ],
       sidebar: [
         {
