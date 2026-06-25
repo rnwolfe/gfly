@@ -256,11 +256,11 @@ gfly search JFK LHR \
 
 ## Conformance
 
-gfly follows the [Agent CLI Guidelines](https://aclig.dev) at **v0.3, Full** — every Core invariant
+gfly follows the [Agent CLI Guidelines](https://aclig.dev) at **v0.4.0, Full** — every Core invariant
 (read-only by default, stdout/stderr discipline, stable `--json` schema, documented exit codes,
-`--no-input` hard-fail, machine-readable `schema`, structured errors, bounded output, untrusted-text
-fencing, append-only fields) plus the Full SHOULDs, including the ones the v0.2/v0.3 revisions added
-for scraped-backend tools:
+`--no-input` hard-fail, machine-readable `schema` with a `conformance` block, structured errors,
+bounded output, untrusted-text fencing, append-only fields) plus the Full SHOULDs, including the ones
+the v0.2/v0.3/v0.4 revisions added for scraped-backend tools:
 
 - **Backpressure** — a persistent, cross-process throttle with a circuit breaker; fail-fast by
   default (see [rate limits](/guides/rate-limits/)).

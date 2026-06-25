@@ -23,7 +23,7 @@ from dataclasses import dataclass
 
 import click
 
-from . import __version__
+from . import SPEC, __version__
 from . import auth as authmod
 from . import backend as be
 from . import throttle
@@ -570,6 +570,7 @@ def schema(ctx, **_):
         "tool": "gfly",
         "version": __version__,
         "schemaVersion": SCHEMA_VERSION,
+        "conformance": {"spec": "agent-cli-guidelines", "version": SPEC, "level": "Full"},
         "commands": info,
         "exit_codes": exit_table(),
         "safety": {"allow_mutations": rt.allow_mutations, "dry_run": rt.dry_run,
