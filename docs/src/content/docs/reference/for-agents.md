@@ -256,12 +256,24 @@ gfly search JFK LHR \
 
 ## Conformance
 
-gfly follows the [Agent CLI Guidelines](https://aclig.dev) at **v0.1, Full** — every Core invariant
+gfly follows the [Agent CLI Guidelines](https://aclig.dev) at **v0.3, Full** — every Core invariant
 (read-only by default, stdout/stderr discipline, stable `--json` schema, documented exit codes,
 `--no-input` hard-fail, machine-readable `schema`, structured errors, bounded output, untrusted-text
-fencing, append-only fields) plus the Full SHOULDs (embedded `agent` guide, `--select` + pagination,
-example-led help, `auth`/`doctor`, prompt-injection fencing on by default). It is listed as a
-[worked example](https://aclig.dev/badge/) of the standard.
+fencing, append-only fields) plus the Full SHOULDs, including the ones the v0.2/v0.3 revisions added
+for scraped-backend tools:
+
+- **Backpressure** — a persistent, cross-process throttle with a circuit breaker; fail-fast by
+  default (see [rate limits](/guides/rate-limits/)).
+- **No evasion** — gfly reduces request volume; it never spoofs UAs, solves CAPTCHAs, or rotates
+  proxies to defeat controls.
+- **Legitimacy boundary** — the unofficial-backend ToS/breakage risk and the intended *personal,
+  legitimate scale* are stated in the README and in `gfly agent` output.
+- **Declared narrowing** — a capped `dates` window (and a mid-scan block) is surfaced in the
+  envelope (`partial`/`scannedDays`), never silently.
+- **Update awareness** — `gfly version --check` returns `{current, latest, updateAvailable, upgrade}`
+  (structured, fail-silent); gfly never auto-updates.
+
+It is listed as a [worked example](https://aclig.dev/badge/) of the standard.
 
 [![Agent CLI Guidelines: Full](https://aclig.dev/badge/agent-cli-guidelines-full.svg)](https://aclig.dev/conformance/)
 

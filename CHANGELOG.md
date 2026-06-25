@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-25
+
+Reaches **Agent CLI Guidelines v0.3, Full**.
+
 ### Added
 - `gfly version --check` — structured, fail-silent update awareness
   (`{current, latest, updateAvailable, upgrade}`); never auto-updates. Plus a human-only,
@@ -37,5 +41,6 @@ First public release.
 - `auth login|status|logout` (OS keyring + `0600` file fallback, stdin-only secrets); real `doctor`.
 - Prompt-injection hardening: third-party text sanitized and fenced as untrusted by default.
 
-[Unreleased]: https://github.com/rnwolfe/gfly/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rnwolfe/gfly/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/rnwolfe/gfly/releases/tag/v0.2.0
 [0.1.0]: https://github.com/rnwolfe/gfly/releases/tag/v0.1.0

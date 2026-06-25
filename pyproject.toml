@@ -1,6 +1,6 @@
 [project]
 name = "gfly"
-version = "0.1.0"
+version = "0.2.0"
 description = "Agent-first, read-only CLI for searching Google Flights (itineraries, price calendar, multi-city)."
 readme = "README.md"
 requires-python = ">=3.10"

@@ -176,7 +176,7 @@ throttle/block), so an agent can back off, switch backend, or report instead of 
 
 ## For agents
 
-> Follows the [Agent CLI Guidelines](https://aclig.dev) (v0.1, **Full**) — read-only by default,
+> Follows the [Agent CLI Guidelines](https://aclig.dev) (v0.3, **Full**) — read-only by default,
 > structured, self-describing, stable exit codes.
 
 ```bash

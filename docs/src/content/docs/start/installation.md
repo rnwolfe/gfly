@@ -5,7 +5,7 @@ owner: rnwolfe
 lastReviewed: 2026-06-24
 ---
 
-`gfly` is a Python package published to [PyPI](https://pypi.org/project/gfly/) as **`gfly`** (v0.1.0).
+`gfly` is a Python package published to [PyPI](https://pypi.org/project/gfly/) as **`gfly`** (v0.2.0).
 The default `google` backend needs **no API key and no account** — install and run.
 
 ## Zero-install trial
