@@ -7,14 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-25
+
+Rolls up to **Agent CLI Guidelines v0.4.0, Full**.
+
 ### Added
 - Machine-readable **conformance block** in `gfly schema --json`:
   `{"spec": "agent-cli-guidelines", "version": "0.4.0", "level": "Full"}` (sourced from the
   package `SPEC` constant), so an agent can verify the contract version from the binary.
+- `gfly version --check` — structured, fail-silent update awareness
+  (`{current, latest, updateAvailable, upgrade}`); never auto-updates. Plus a human-only,
+  daily-cached passive "update available" notice (TTY + plain only; silent for agents).
 
 ### Changed
 - Pinned the conformance statement to **Agent CLI Guidelines v0.4.0, Full** (was an imprecise
   "v0.3") across the README and the for-agents reference.
+
+### Security
+- Update check fetches only a hardcoded PyPI endpoint (`https://pypi.org/pypi/gfly/json`) with a
+  fixed `User-Agent`; there is no `*_RELEASES_URL` override, so no SSRF override-guard is needed.
 
 ## [0.2.0] - 2026-06-25
 
@@ -50,6 +61,7 @@ First public release.
 - `auth login|status|logout` (OS keyring + `0600` file fallback, stdin-only secrets); real `doctor`.
 - Prompt-injection hardening: third-party text sanitized and fenced as untrusted by default.
 
-[Unreleased]: https://github.com/rnwolfe/gfly/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/rnwolfe/gfly/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/rnwolfe/gfly/releases/tag/v0.3.0
 [0.2.0]: https://github.com/rnwolfe/gfly/releases/tag/v0.2.0
 [0.1.0]: https://github.com/rnwolfe/gfly/releases/tag/v0.1.0
