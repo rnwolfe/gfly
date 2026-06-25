@@ -49,7 +49,14 @@
   .sub{color:var(--muted);margin-top:.4em;font-size:14px}
 
   /* ---- install ---- */
-  .install{display:flex;gap:10px;justify-content:center;align-items:stretch;margin:26px auto 4px;flex-wrap:wrap}
+  .install{display:flex;flex-direction:column;gap:10px;align-items:center;margin:26px auto 4px}
+  .tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--line);border-radius:999px;
+       padding:6px 16px;color:var(--muted);font-family:inherit;font-size:13px;cursor:pointer;
+       letter-spacing:.04em}
+  .tab:hover{color:var(--ink)}
+  .tab.active{background:var(--amber);color:#10130a;border-color:var(--amber);font-weight:700}
+  .install .sub{margin-top:2px}
   .cmd{background:var(--panel);border:1px solid var(--line);border-radius:10px;
        padding:14px 16px;display:flex;align-items:center;gap:12px;min-width:min(560px,92vw)}
   .cmd code{color:var(--ink);font-size:15px;white-space:nowrap;overflow:auto}
@@ -116,11 +123,19 @@
   </header>
 
   <div class="install">
+    <div class="tabs" id="tabs" role="tablist" aria-label="Install method">
+      <button class="tab active" data-cmd="uvx gfly search JFK LHR --depart 2026-08-15" role="tab">uvx</button>
+      <button class="tab" data-cmd="uv tool install gfly" role="tab">uv</button>
+      <button class="tab" data-cmd="pipx install gfly" role="tab">pipx</button>
+      <button class="tab" data-cmd="pip install gfly" role="tab">pip</button>
+      <button class="tab" data-cmd="brew install rnwolfe/tap/gfly" role="tab">brew</button>
+    </div>
     <div class="cmd">
       <span class="dollar">$</span>
       <code id="cmd">uvx gfly search JFK LHR --depart 2026-08-15</code>
       <button onclick="copyCmd()" id="copyBtn">copy</button>
     </div>
+    <p class="sub">uvx runs it with zero install · requires Python ≥ 3.10</p>
   </div>
   <div class="links">
     <a class="pill" href="https://github.com/rnwolfe/gfly">GitHub →</a>
@@ -178,6 +193,15 @@
       setTimeout(()=>b.textContent='copy',1400);
     });
   }
+
+  // ---- install method tabs ----
+  document.querySelectorAll('#tabs .tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('cmd').textContent = t.dataset.cmd;
+    });
+  });
 
   // ---- split-flap board ----
   const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789→ ·";

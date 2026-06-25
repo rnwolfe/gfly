@@ -74,11 +74,11 @@ That's the whole onboarding. No account, no API key — the agent (or you) just 
 
 | Method | Command |
 |---|---|
-| **uv** (recommended) | `uv tool install gfly` |
-| **uvx** (zero-install trial) | `uvx gfly search JFK LHR --depart 2026-08-15` |
-| **Homebrew** | `brew install rnwolfe/tap/gfly` |
+| **uvx** (recommended, zero-install run) | `uvx gfly search JFK LHR --depart 2026-08-15` |
+| **uv** | `uv tool install gfly` |
 | **pipx** | `pipx install gfly` |
 | **pip** | `pip install gfly` |
+| **Homebrew** (macOS/Linux) | `brew install rnwolfe/tap/gfly` |
 
 Requires Python ≥ 3.10. Ships `fast-flights` (google engine) + offline IATA data; the `serpapi`
 backend needs no extra dependency.
