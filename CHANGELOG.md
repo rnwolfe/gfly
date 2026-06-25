@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `gfly version --check` — structured, fail-silent update awareness
+  (`{current, latest, updateAvailable, upgrade}`); never auto-updates. Plus a human-only,
+  daily-cached passive "update available" notice (TTY + plain only; silent for agents).
+- `dates` now **declares a capped window in the envelope** (`partial`, `scannedDays`,
+  `requestedDays`, `narrowed`) instead of only on stderr.
+- Explicit **legitimacy-boundary** disclosure (personal/legitimate scale; reduce-volume, never
+  evade) in the README and the embedded `agent` output.
+
+These close the gap to **Agent CLI Guidelines v0.3, Full** (the new v0.2/v0.3 SHOULDs:
+update-awareness, declare-narrowed-results, and the legitimacy-boundary statement). Core (the
+10 invariants) was already met; backpressure was already exemplary.
+
 ## [0.1.0] - 2026-06-23
 
 First public release.

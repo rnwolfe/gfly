@@ -187,6 +187,36 @@ def test_version_flag_prints_bare_string(capsys):
     assert code == 0 and out and " " not in out
 
 
+def test_version_check_structured(capsys, monkeypatch):
+    from gfly import update
+    monkeypatch.setattr(update, "fetch_latest", lambda timeout=2.0: "9.9.9")
+    code = run(["version", "--check", "--json"])
+    d = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert d["latest"] == "9.9.9" and d["updateAvailable"] is True and d["upgrade"]
+    assert "current" in d
+
+
+def test_version_check_fail_silent_and_up_to_date(capsys, monkeypatch):
+    from gfly import update
+    monkeypatch.setattr(update, "fetch_latest", lambda timeout=2.0: None)  # network down
+    code = run(["version", "--check", "--json"])
+    d = json.loads(capsys.readouterr().out)
+    assert code == 0 and d["latest"] is None and d["updateAvailable"] is False
+    monkeypatch.setattr(update, "fetch_latest", lambda timeout=2.0: "0.0.1")  # older
+    run(["version", "--check", "--json"])
+    assert json.loads(capsys.readouterr().out)["updateAvailable"] is False
+
+
+def test_dates_window_cap_declared_in_envelope(capsys):
+    code = run(["dates", "JFK", "LHR", "--depart-range", "2026-08-01..2026-09-10", "--json"])
+    env = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert env["partial"] is True            # narrowing declared, not silent
+    assert env["scannedDays"] == 30 and env["requestedDays"] == 41
+    assert "narrowed" in env
+
+
 def test_schema_has_safety_and_gfly_exit_codes(capsys):
     code = run(["schema"])
     s = json.loads(capsys.readouterr().out)

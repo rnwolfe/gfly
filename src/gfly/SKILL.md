@@ -51,6 +51,14 @@ gfly search JFK LHR --depart 2026-08-01 --limit 5 --offset 5 --json   # next pag
 - `--backend serpapi` — live SerpApi JSON; set `GFLY_SERPAPI_KEY` or
   `echo $KEY | gfly auth login --backend serpapi --token-stdin`. (`multi` is google-only.)
 
+## Legitimacy & scale (read before looping)
+The default `google` backend rides an **unofficial, undocumented** Google Flights endpoint. It is
+for **personal, legitimate-scale** use — interactive trip research and modest agent runs. Do **not**
+drive it at bulk or commercial scale, or to resell data: that violates Google's ToS and will get the
+source IP blocked. gfly **self-throttles to reduce load** (it does not evade controls — no UA
+spoofing, no CAPTCHA solving, no proxy rotation). Breakage is expected (surfaced as `SCHEMA_DRIFT`).
+For reliability or higher volume, use `--backend serpapi` (its own ToS and quota apply).
+
 ## Rate limits & blocking (important for loops)
 The `google` backend is scraped, so gfly enforces a **persistent politeness throttle** across
 invocations (default `--min-interval 12`s). Default behavior is **fail-fast**, not silent sleep:

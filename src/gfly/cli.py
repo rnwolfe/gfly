@@ -357,8 +357,10 @@ def dates(ctx, origin, dest, depart_range, **_):
     """
     rt = make_runtime(ctx)
     window = _parse_range(depart_range)
-    if len(window) > _DATES_MAX_DAYS:
-        rt.out.info(f"note: window capped to {_DATES_MAX_DAYS} of {len(window)} days")
+    requested_days = len(window)
+    capped = requested_days > _DATES_MAX_DAYS
+    if capped:
+        rt.out.info(f"note: window capped to {_DATES_MAX_DAYS} of {requested_days} days")
         window = window[:_DATES_MAX_DAYS]
 
     pace = 0.0 if (rt.no_throttle or rt.backend == "serpapi") else rt.min_interval
@@ -390,8 +392,13 @@ def dates(ctx, origin, dest, depart_range, **_):
     if not items:
         raise empty_results("dates")
     items.sort(key=lambda r: r["price"])
+    # Declare any narrowing in the envelope, not just on stderr (don't silently limit output).
+    extra = dict(partial) if partial else {}
+    if capped:
+        extra.update(partial=True, scannedDays=len(window), requestedDays=requested_days,
+                     narrowed=f"window capped to {_DATES_MAX_DAYS} days")
     query = {"from": origin.upper(), "to": dest.upper(), "departRange": depart_range}
-    _emit_envelope(rt, query, "dates", items, extra=partial)
+    _emit_envelope(rt, query, "dates", items, extra=extra or None)
 
 
 # --- multi (read) -----------------------------------------------------------
@@ -584,10 +591,16 @@ def agent(ctx, **_):
 
 @cli.command()
 @global_options
+@click.option("--check", "do_check", is_flag=True,
+              help="Check PyPI for a newer version (structured, fail-silent; never auto-updates).")
 @click.pass_context
-def version(ctx, **_):
-    """Print the version."""
+def version(ctx, do_check, **_):
+    """Print the version, or `--check` for update availability."""
     rt = make_runtime(ctx)
+    if do_check:
+        from . import update
+        rt.out.emit(update.check())
+        return
     rt.out.emit({"version": __version__})
 
 
@@ -596,7 +609,9 @@ def version(ctx, **_):
 def run(argv: list[str] | None = None) -> int:
     try:
         rv = cli.main(args=argv, standalone_mode=False)
-        return rv if isinstance(rv, int) else ExitCode.OK
+        code = rv if isinstance(rv, int) else ExitCode.OK
+        _maybe_update_notice()
+        return code
     except (click.exceptions.Exit, SystemExit) as e:  # --help / --version
         code = getattr(e, "exit_code", getattr(e, "code", 0))
         return int(code or 0)
@@ -608,6 +623,22 @@ def run(argv: list[str] | None = None) -> int:
     except AppError as e:
         _emit_error(e)
         return e.exit
+
+
+def _maybe_update_notice() -> None:
+    """Passive 'update available' hint — HUMAN-ONLY (TTY + plain format), cached daily,
+    fail-silent, never for agents (json/tsv/non-TTY/--no-input). Contract: never auto-update."""
+    rt = _active
+    if rt is None or rt.fmt != "plain" or rt.no_input:
+        return
+    if not sys.stdout.isatty() or _truthy_env("GFLY_NO_UPDATE_CHECK"):
+        return
+    try:
+        from . import update
+        if msg := update.passive_notice():
+            print(msg, file=sys.stderr)
+    except Exception:
+        pass
 
 
 def _emit_error(e: AppError) -> None:

@@ -193,6 +193,10 @@ fenced as untrusted by default (`--no-wrap-untrusted` to disable).
 
 - The default backend uses an **unofficial, undocumented** endpoint. Expect periodic breakage
   (surfaced as `SCHEMA_DRIFT`) and rate-limiting/CAPTCHA (surfaced as `BLOCKED`). Pin the version.
+- **Legitimacy boundary:** it's for **personal, legitimate-scale** use — interactive research and
+  modest agent runs. Don't drive it at bulk/commercial scale or to resell data (violates Google's
+  ToS, and gets the IP blocked). gfly **self-throttles to reduce load — it never evades controls**
+  (no UA spoofing, CAPTCHA solving, or proxy rotation).
 - `gfly` is **read-only** — it searches, it cannot book.
 - The `serpapi` backend is a third-party paid service with its own ToS; it's a fallback, never the
   sole path. See [SECURITY.md](SECURITY.md) for the credential threat model.
