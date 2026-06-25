@@ -17,3 +17,6 @@ def _version() -> str:
 
 
 __version__ = _version()
+
+# Agent CLI Guidelines version this tool conforms to (declared in `schema`).
+SPEC = "0.4.0"

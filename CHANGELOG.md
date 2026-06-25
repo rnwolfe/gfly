@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Machine-readable **conformance block** in `gfly schema --json`:
+  `{"spec": "agent-cli-guidelines", "version": "0.4.0", "level": "Full"}` (sourced from the
+  package `SPEC` constant), so an agent can verify the contract version from the binary.
+
+### Changed
+- Pinned the conformance statement to **Agent CLI Guidelines v0.4.0, Full** (was an imprecise
+  "v0.3") across the README and the for-agents reference.
+
 ## [0.2.0] - 2026-06-25
 
 Reaches **Agent CLI Guidelines v0.3, Full**.
